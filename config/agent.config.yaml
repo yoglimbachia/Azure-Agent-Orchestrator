@@ -1,0 +1,72 @@
+agent:
+  name: AzureInfraOrchestrator
+  version: "0.1.0"
+  runtime: azure-durable-functions  # or azure-logic-apps
+  max_iterations: 12
+
+model:
+  provider: azure-ai-foundry
+  deployment: llama-3-8b  # or mistral-7b, phi-3
+  temperature: 0.1
+  max_tokens: 2048
+  endpoint_key_vault_secret: kv-foundry-endpoint-key
+
+subagents:
+  planner:
+    name: planner
+    spec: agents/planner.agent.md
+  retriever:
+    name: retriever
+    spec: agents/retriever.agent.md
+  policy:
+    name: policy
+    spec: agents/policy.agent.md
+  executor:
+    name: executor
+    spec: agents/executor.agent.md
+
+infrastructure:
+  subscription: "<subscription-id>"
+  resource_group: "<resource-group>"
+  location: northeurope
+
+security:
+  identity: managed-identity
+  key_vault: "<keyvault-name>"
+  content_safety_endpoint: "<content-safety-endpoint>"
+  entra_tenant_id: "<tenant-id>"
+
+search:
+  service: "<search-service-name>"
+  default_index: enterprise-knowledge
+  semantic_config: default
+
+apim:
+  gateway: "<apim-gateway-url>"
+  product: agent-standard
+
+observability:
+  app_insights_connection_string_secret: kv-appinsights-connection
+  log_analytics_workspace_id: "<workspace-id>"
+  trace_all_steps: true
+
+approval:
+  default_timeout_minutes: 240
+  escalation_on_timeout: auto-deny
+  channels:
+    - teams
+    - email
+
+environments:
+  - name: dev
+    resource_group: rg-agent-dev
+    apim_sku: Developer
+    private_endpoints: false
+  - name: nonprod
+    resource_group: rg-agent-nonprod
+    apim_sku: Standard
+    private_endpoints: true
+  - name: prod
+    resource_group: rg-agent-prod
+    apim_sku: Premium
+    private_endpoints: true
