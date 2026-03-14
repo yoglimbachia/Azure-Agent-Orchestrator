@@ -1,0 +1,107 @@
+flowchart TB
+
+%% ===========================
+%% STYLE & ICONS (Text Labels)
+%% ===========================
+
+classDef azure fill:#005FB8,stroke:#003f7f,color:#fff;
+classDef service fill:#ececec,stroke:#999,color:#000;
+classDef agent fill:#F2EBFF,stroke:#6A00F4,color:#000;
+classDef data fill:#FFF7CC,stroke:#C9A000,color:#000;
+classDef security fill:#FFE6E6,stroke:#CC0000,color:#000;
+classDef gateway fill:#E6F7FF,stroke:#0099CC,color:#000;
+
+%% ==================================
+%%   USER + ACCESS + FRONT END
+%% ==================================
+
+User["👤 End User (Portal / WebChat / App)"]:::service
+
+UI["🖥️ Front‑end UI<br/>React / Web App / Bot Adapter"]:::service
+
+User --> UI
+
+%% ==================================
+%%   ORCHESTRATOR
+%% ==================================
+
+Orch["🔷 Azure Logic Apps / Durable Functions<br/>Agent Orchestration Engine"]:::azure
+
+UI --> Orch
+
+%% ==================================
+%%   AGENTS LAYER
+%% ==================================
+
+Planner["🧠 Planner Agent<br/>LLM-based task planning<br/>via Foundry OSS Model"]:::agent
+Retriever["🔍 Retriever Agent<br/>RAG using Azure AI Search"]:::agent
+Policy["⚖️ Policy/Safety Agent<br/>RAI + PII + Access checks"]:::agent
+Executor["⚙️ Executor Agent<br/>Tool/API calls via APIM"]:::agent
+
+Orch --> Planner
+Orch --> Retriever
+Orch --> Policy
+Orch --> Executor
+
+%% ==================================
+%%   FOUNDATIONS - MODEL LAYER
+%% ==================================
+
+FoundryOSS["🟪 Azure AI Foundry<br/>Open‑Source Model Deployment<br/>(Llama / Mistral / Phi‑3)"]:::azure
+
+Planner --> FoundryOSS
+Policy --> FoundryOSS
+
+%% ==================================
+%%   RAG LAYER
+%% ==================================
+
+AISearch["📘 Azure AI Search<br/>Vector + Hybrid Retrieval"]:::azure
+Retriever --> AISearch
+AISearch --> Retriever
+
+%% ==================================
+%%   TOOL EXECUTION
+%% ==================================
+
+APIM["🔹 Azure API Management<br/>(APIM Gateway)"]:::gateway
+Executor --> APIM
+
+Backend1["📂 Internal APIs / Line-of-Business Systems"]:::service
+Backend2["💼 CRM / ERP / HRIS"]:::service
+Backend3["📨 Messaging (Teams/Email)"]:::service
+
+APIM --> Backend1
+APIM --> Backend2
+APIM --> Backend3
+
+%% ==================================
+%%   SECURITY / GOVERNANCE / IDENTITY
+%% ==================================
+
+Entra["🔐 Microsoft Entra ID<br/>RBAC / OAuth2 / Managed Identity"]:::security
+KeyVault["🔑 Azure Key Vault<br/>Secrets / Keys / Certs"]:::security
+Monitor["📈 Azure Monitor + App Insights<br/>Tracing / Logging / Audit"]:::security
+PolicySvc["📜 Azure Policy + Defender<br/>Governance / Compliance"]:::security
+
+%% Connections
+Orch --> Entra
+Planner --> Entra
+Retriever --> Entra
+Executor --> Entra
+
+Orch --> KeyVault
+APIM --> KeyVault
+
+Orch --> Monitor
+Planner --> Monitor
+Retriever --> Monitor
+Executor --> Monitor
+
+%% ==================================
+%%   DATA SOURCES
+%% ==================================
+
+Storage["🗄️ Azure Storage / CosmosDB<br/>Knowledge, Logs, Memory"]:::data
+AISearch --> Storage
+Retriever --> Storage
